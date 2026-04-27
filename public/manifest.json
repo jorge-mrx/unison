@@ -1,0 +1,19 @@
+{
+  "name": "Unison",
+  "short_name": "Unison",
+  "description": "Biblioteca colaborativa de canciones y setlists para vocalistas y bandas",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0f",
+  "theme_color": "#13131c",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
