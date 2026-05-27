@@ -54,6 +54,18 @@ export const createSongSchema = z.object({
     .max(200, "Máximo 200 caracteres"),
   artist: optionalTrimmed(120),
   originalKey: optionalTrimmed(8),
+  capo: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+        const n = Number(value);
+        return Number.isInteger(n) && n >= 0 && n <= 12;
+      },
+      "Capo debe ser entre 0 y 12",
+    ),
   bpm: bpmField,
   genre: optionalTrimmed(60),
   tags: optionalTrimmed(200),

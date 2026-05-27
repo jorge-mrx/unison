@@ -43,6 +43,7 @@ export async function createSongAction(input: CreateSongInput): Promise<CreateSo
   const session = await auth();
   const data = parsed.data;
   const bpm = data.bpm ? Number(data.bpm) : null;
+  const capo = data.capo ? Number(data.capo) : null;
   const blank = (v?: string) => (v && v.trim() ? v.trim() : null);
   const songHasChords = hasChords(data.contentChordPro);
 
@@ -57,6 +58,7 @@ export async function createSongAction(input: CreateSongInput): Promise<CreateSo
         artist: blank(data.artist),
         originalKey: blank(data.originalKey),
         bpm,
+        capo,
         genre: blank(data.genre),
         tags: blank(data.tags),
         contentChordPro: data.contentChordPro,
@@ -84,6 +86,7 @@ export async function createSongAction(input: CreateSongInput): Promise<CreateSo
         artist: blank(data.artist),
         originalKey: blank(data.originalKey),
         bpm,
+        capo,
         genre: blank(data.genre),
         tags: blank(data.tags),
         contentChordPro: data.contentChordPro,

@@ -140,11 +140,11 @@ export const es = {
     create: {
       title: "Nuevo setlist",
       nameLabel: "Nombre",
-      namePlaceholder: "Ej: Cumple Pao",
+      namePlaceholder: "Ej: Fiesta de Juan",
       dateLabel: "Fecha (opcional)",
       datePlaceholder: "YYYY-MM-DD",
       venueLabel: "Lugar (opcional)",
-      venuePlaceholder: "Ej: Casa de Pao",
+      venuePlaceholder: "Ej: Pedro's Rock Bar",
       notesLabel: "Notas (opcional)",
       submit: "Crear setlist",
     },

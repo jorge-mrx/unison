@@ -1,6 +1,6 @@
 import { ChordProFormatter, ChordProParser, Song } from "chordsheetjs";
 
-const CHORD_TOKEN = /^[A-G][#b]?(?:m|maj|min|sus|dim|aug|add)?(?:\d{1,2})?(?:\/[A-G][#b]?)?$/;
+const CHORD_TOKEN = /^[A-G][#b♭♯]?(?:[°+]|m(?:aj|in)?|sus|dim|aug|add)*\d{0,2}(?:M(?:aj)?)?(?:\d{0,2})?(?:\([^)]*\))?(?:\/[A-G][#b♭♯]?)?$/;
 
 export function parseChordPro(text: string): Song {
   return new ChordProParser().parse(text);
@@ -104,52 +104,112 @@ export function mergeChordLineWithLyrics(chordLine: string, lyricsLine: string):
     tokens.push({ col: start, chord: chordLine.slice(start, i) });
   }
 
-  let result = lyricsLine;
+  let result = lyricsLine.replace(/  +/g, " ");
   let inserted = 0;
-  for (const { col, chord } of tokens) {
-    const target = Math.min(col + inserted, result.length);
-    const marker = `[${chord}]`;
+  for (let t = 0; t < tokens.length; t++) {
+    const { col, chord } = tokens[t];
+    let target = Math.min(col + inserted, result.length);
+    const marker = `[${normalizeChordName(chord)}]`;
+
+    if (target > 0 && target < result.length) {
+      const charBefore = result[target - 1];
+      const charAt = result[target];
+      if (charBefore !== " " && charAt !== " " && charAt !== undefined) {
+        const wordStart = result.lastIndexOf(" ", target - 1);
+        if (wordStart >= 0 && target - wordStart <= 4) {
+          target = wordStart + 1;
+        } else if (wordStart < 0 && !result.startsWith("[")) {
+          target = 0;
+        }
+      }
+    }
+
+    if (target >= result.length && target > 0) {
+      result = result + "   " + marker;
+      inserted += marker.length + 3;
+      continue;
+    }
+
     result = result.slice(0, target) + marker + result.slice(target);
     inserted += marker.length;
   }
   return result;
 }
 
+function normalizeChordName(chord: string): string {
+  return chord
+    .replace(/^([A-G][#b♭♯]?)(4)$/, "$1sus4")
+    .replace(/^([A-G][#b♭♯]?)(2)$/, "$1sus2");
+}
+
+const KEEP_LABELS = new Set([
+  "intro", "solo", "outro", "bridge", "interlude", "instrumental",
+  "puente", "entrada", "salida",
+]);
+
+const SECTION_LABEL_RE = /^\[([^\]]+)\]\s*(.*)$/;
+const PAREN_PROGRESSION_RE = /^\(\s*([^)]+)\s*\)$/;
+const REPEAT_SUFFIX_RE = /\s*[x×]\s*\d+\s*$/i;
+
+function isChordProgression(text: string): boolean {
+  const cleaned = text.replace(REPEAT_SUFFIX_RE, "").trim();
+  return cleaned.length > 0 && isChordOnlyLine(cleaned);
+}
+
 export function autoFormatPastedText(raw: string): string {
   const lines = splitLines(raw);
   const out: string[] = [];
+
   for (let i = 0; i < lines.length; i++) {
     const cur = lines[i] ?? "";
     const next = lines[i + 1];
+    const trimmed = cur.trim();
+
+    const labelMatch = trimmed.match(SECTION_LABEL_RE);
+    if (labelMatch) {
+      const label = labelMatch[1].trim();
+      const remainder = labelMatch[2].trim();
+      const key = label.toLowerCase().replace(/\s+/g, " ");
+
+      if (KEEP_LABELS.has(key)) {
+        out.push(`{comment: ${label}}`);
+      }
+
+      if (remainder) {
+        if (isChordProgression(remainder)) {
+          out.push(`{comment: ${remainder}}`);
+        } else {
+          out.push(remainder);
+        }
+      }
+      continue;
+    }
+
+    const parenMatch = trimmed.match(PAREN_PROGRESSION_RE);
+    if (parenMatch && isChordProgression(parenMatch[1].trim())) {
+      out.push(`{comment: ${parenMatch[1].trim()}}`);
+      continue;
+    }
+
     if (isChordOnlyLine(cur) && next !== undefined && next.trim() !== "" && !isChordOnlyLine(next)) {
       out.push(mergeChordLineWithLyrics(cur, next));
       i++;
       continue;
     }
 
-    const sectionMatch = cur.trim().match(/^\[(verso|coro|chorus|verse|bridge|intro|puente|estribillo)\s*(\d*)\]$/i);
-    if (sectionMatch) {
-      const label = sectionMatch[1].toLowerCase();
-      const num = sectionMatch[2] ? ` ${sectionMatch[2]}` : "";
-      out.push(`{start_of_${normalizeSection(label)}: ${capitalize(label)}${num}}`);
-      continue;
+    if (isChordProgression(trimmed) && trimmed.length > 0) {
+      const isLastOrNextEmpty =
+        next === undefined || next.trim() === "" || isChordOnlyLine(next);
+      if (isLastOrNextEmpty) {
+        out.push(`{comment: ${trimmed}}`);
+        continue;
+      }
     }
 
     out.push(cur);
   }
-  return out.join("\n").replace(/\n{3,}/g, "\n\n");
-}
 
-function normalizeSection(label: string): string {
-  if (label === "verso" || label === "verse") return "verse";
-  if (label === "coro" || label === "chorus" || label === "estribillo") return "chorus";
-  if (label === "puente" || label === "bridge") return "bridge";
-  if (label === "intro") return "verse";
-  return "verse";
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 export const ChordProDocs = {

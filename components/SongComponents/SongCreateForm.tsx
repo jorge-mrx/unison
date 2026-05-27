@@ -20,6 +20,7 @@ import { ArtistAutocomplete } from "@/components/SongComponents/ArtistAutocomple
 import { SongEditor } from "@/components/SongComponents/SongEditor";
 import { createSongAction } from "@/lib/actions/songs";
 import { hasChords } from "@/lib/chordpro";
+import type { CifraMetadata } from "@/lib/chordpro/formats/cifraclub";
 import { createSongSchema, type CreateSongInput } from "@/lib/validations";
 import { es } from "@/lib/i18n/locales/es";
 
@@ -49,6 +50,7 @@ export function SongCreateForm({ isAuthenticated }: Props) {
 
   const [restoreOpen, setRestoreOpen] = useState(false);
   const draftRef = useRef<DraftPayload | null>(null);
+  const detectedMetaRef = useRef<CifraMetadata>({});
 
   const dirty = step === "lyrics" && content.trim().length > 0;
 
@@ -115,6 +117,7 @@ export function SongCreateForm({ isAuthenticated }: Props) {
       title: "",
       artist: "",
       originalKey: "",
+      capo: "",
       bpm: "",
       genre: "",
       tags: "",
@@ -123,6 +126,12 @@ export function SongCreateForm({ isAuthenticated }: Props) {
       authorGuestName: "",
     },
   });
+
+  const handleMetadataDetected = (meta: CifraMetadata) => {
+    detectedMetaRef.current = meta;
+    if (meta.originalKey) setValue("originalKey", meta.originalKey);
+    if (meta.capo) setValue("capo", String(meta.capo));
+  };
 
   const onSubmit = (values: CreateSongInput) => {
     setServerError(null);
@@ -235,7 +244,11 @@ export function SongCreateForm({ isAuthenticated }: Props) {
             </Button>
           </div>
 
-          <SongEditor value={content} onChange={setContent} />
+          <SongEditor
+            value={content}
+            onChange={setContent}
+            onMetadataDetected={handleMetadataDetected}
+          />
         </div>
 
         <Dialog open={leaveOpen} onOpenChange={(open) => !open && closeLeaveDialog()}>
