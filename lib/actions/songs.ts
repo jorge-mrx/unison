@@ -11,7 +11,7 @@ import {
   type SongFilter,
   type SongWithAuthor,
 } from "@/database/queries/songs";
-import { hasChords } from "@/lib/chordpro";
+import { hasChords, autoFormatPastedText, isChordOnlyLine } from "@/lib/chordpro";
 import { getCurrentGuestId, getOrCreateGuestId } from "@/lib/guest";
 import { checkGuestUploadLimit } from "@/lib/ratelimit";
 import {
@@ -20,6 +20,16 @@ import {
   type CreateSongInput,
   type UpdateSongInput,
 } from "@/lib/validations";
+
+function ensureChordPro(content: string): string {
+  if (content.includes("[") && /\[[A-G]/.test(content)) return content;
+  const lines = content.split(/\r?\n/);
+  const hasUnmergedChordLines = lines.some(
+    (l, i) => isChordOnlyLine(l) && lines[i + 1] !== undefined && lines[i + 1]!.trim() !== "" && !isChordOnlyLine(lines[i + 1]!),
+  );
+  if (!hasUnmergedChordLines) return content;
+  return autoFormatPastedText(content);
+}
 
 export type CreateSongResult =
   | { ok: true; publicId: string }
@@ -42,6 +52,7 @@ export async function createSongAction(input: CreateSongInput): Promise<CreateSo
 
   const session = await auth();
   const data = parsed.data;
+  data.contentChordPro = ensureChordPro(data.contentChordPro);
   const bpm = data.bpm ? Number(data.bpm) : null;
   const capo = data.capo ? Number(data.capo) : null;
   const blank = (v?: string) => (v && v.trim() ? v.trim() : null);
@@ -134,6 +145,7 @@ export async function updateSongAction(
   }
 
   const data = parsed.data;
+  data.contentChordPro = ensureChordPro(data.contentChordPro);
   const bpm = data.bpm ? Number(data.bpm) : null;
   const blank = (v?: string) => (v && v.trim() ? v.trim() : null);
 

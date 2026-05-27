@@ -1,6 +1,6 @@
 import { ChordProFormatter, ChordProParser, Song } from "chordsheetjs";
 
-const CHORD_TOKEN = /^[A-G][#b♭♯]?(?:[°+]|m(?:aj|in)?|sus|dim|aug|add)*\d{0,2}(?:M(?:aj)?)?(?:\d{0,2})?(?:\([^)]*\))?(?:\/[A-G][#b♭♯]?)?$/;
+const CHORD_TOKEN = /^[(]?[A-G][#b♭♯]?(?:[°º+]|m(?:aj|in)?|sus|dim|aug|add)*(?:[#b♭♯]?\d{1,2}[+\-]?)*(?:M(?:aj)?)?(?:\([^)]*\))?[)]?(?:\/[A-G][#b♭♯]?m?\d{0,2})?$/;
 
 export function parseChordPro(text: string): Song {
   return new ChordProParser().parse(text);
@@ -10,7 +10,7 @@ export function splitLines(text: string): string[] {
   return text.split(/\r?\n/);
 }
 
-const CHORD_INLINE = /\[[A-G][#b]?(?:m|maj|min|sus|dim|aug|add)?(?:\d{1,2})?(?:\/[A-G][#b]?)?\]/;
+const CHORD_INLINE = /\[[(]?[A-G][#b♭♯]?(?:[°º+]|m(?:aj|in)?|sus|dim|aug|add)*(?:[#b♭♯]?\d{1,2}[+\-]?)*(?:M(?:aj)?)?(?:\([^)]*\))?[)]?(?:\/[A-G][#b♭♯]?m?\d{0,2})?\]/;
 
 export function hasChords(text: string): boolean {
   return CHORD_INLINE.test(text);
