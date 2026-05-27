@@ -20,6 +20,7 @@ import {
 import { ArtistAutocomplete } from "@/components/SongComponents/ArtistAutocomplete";
 import { SongEditor } from "@/components/SongComponents/SongEditor";
 import { createSongAction } from "@/lib/actions/songs";
+import { searchSongByLyrics } from "@/lib/actions/genius";
 import { hasChords } from "@/lib/chordpro";
 import type { CifraMetadata } from "@/lib/chordpro/formats/cifraclub";
 import { createSongSchema, type CreateSongInput } from "@/lib/validations";
@@ -52,6 +53,7 @@ export function SongCreateForm({ isAuthenticated }: Props) {
   const [restoreOpen, setRestoreOpen] = useState(false);
   const draftRef = useRef<DraftPayload | null>(null);
   const detectedMetaRef = useRef<CifraMetadata>({});
+  const [lookingUp, setLookingUp] = useState(false);
 
   const dirty = step === "lyrics" && content.trim().length > 0;
 
@@ -110,6 +112,7 @@ export function SongCreateForm({ isAuthenticated }: Props) {
     register,
     handleSubmit,
     setValue,
+    getValues,
     control,
     formState: { errors },
   } = useForm<CreateSongInput>({
@@ -233,14 +236,25 @@ export function SongCreateForm({ isAuthenticated }: Props) {
             </Button>
             <Button
               type="button"
-              disabled={!canContinue}
-              onClick={() => {
+              disabled={!canContinue || lookingUp}
+              onClick={async () => {
                 setValue("contentChordPro", content, { shouldValidate: true });
+                setLookingUp(true);
+                try {
+                  const match = await searchSongByLyrics(content);
+                  if (match) {
+                    if (match.title && !getValues("title")) setValue("title", match.title);
+                    if (match.artist && !getValues("artist")) setValue("artist", match.artist);
+                  }
+                } catch {
+                  // lookup is best-effort
+                }
+                setLookingUp(false);
                 setStep("details");
               }}
               className="h-10 gap-1.5 px-4"
             >
-              {t.continue}
+              {lookingUp ? "Buscando…" : t.continue}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
