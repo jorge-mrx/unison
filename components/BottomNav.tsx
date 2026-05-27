@@ -48,7 +48,7 @@ export function BottomNav({ isAuthed }: Props) {
 
   const profileItem = isAuthed
     ? { href: "/perfil", label: "Perfil", icon: User }
-    : { href: "/sign-in", label: "Entrar", icon: LogIn };
+    : { href: "/sign-in", label: "Acceder", icon: LogIn };
 
   const items = [...PRIMARY_ITEMS, profileItem];
 

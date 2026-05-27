@@ -36,7 +36,7 @@ export function AppNav({ isAuthed }: Props) {
             href="/sign-in"
             className="ml-auto rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
-            Entrar
+            Acceder
           </Link>
         )}
       </nav>

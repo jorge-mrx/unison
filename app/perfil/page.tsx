@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
+import { ChangePasswordForm } from "@/components/AuthComponents/ChangePasswordForm";
 import { SignOutButton } from "@/components/AuthComponents/SignOutButton";
 import { PreferencesSection } from "@/components/PreferencesSection";
 import { es } from "@/lib/i18n/locales/es";
@@ -31,6 +32,8 @@ export default async function PerfilPage() {
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </section>
       )}
+
+      <ChangePasswordForm />
 
       <PreferencesSection />
 

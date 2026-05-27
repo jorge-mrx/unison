@@ -1,13 +1,20 @@
 "use server";
 
-import { hash } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { AuthError } from "next-auth";
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/database/drizzle";
 import { users } from "@/database/schema";
 import { migrateGuestSongsAction } from "@/lib/actions/songs";
-import { signInSchema, signUpSchema, type SignInInput, type SignUpInput } from "@/lib/validations";
+import {
+  signInSchema,
+  signUpSchema,
+  changePasswordSchema,
+  type SignInInput,
+  type SignUpInput,
+  type ChangePasswordInput,
+} from "@/lib/validations";
 
 export type ActionResult =
   | { ok: true; redirectTo: string }
@@ -84,6 +91,48 @@ export async function signUpAction(input: SignUpInput): Promise<ActionResult> {
   }
 
   return { ok: true, redirectTo: "/" };
+}
+
+export async function changePasswordAction(
+  input: ChangePasswordInput,
+): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, error: "Necesitas iniciar sesión" };
+  }
+
+  const parsed = changePasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+
+  const userId = Number(session.user.id);
+  const [user] = await db
+    .select({ passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) {
+    return { ok: false, error: "Usuario no encontrado" };
+  }
+
+  const ok = await compare(parsed.data.currentPassword, user.passwordHash);
+  if (!ok) {
+    return { ok: false, error: "La contraseña actual es incorrecta" };
+  }
+
+  const newHash = await hash(parsed.data.newPassword, 12);
+  await db
+    .update(users)
+    .set({
+      passwordHash: newHash,
+      recordUpdatedTimesTamp: new Date(),
+      recordModifiedBy: `User:${userId}`,
+    })
+    .where(eq(users.id, userId));
+
+  return { ok: true, redirectTo: "/perfil" };
 }
 
 export async function signOutAction(): Promise<ActionResult> {
