@@ -1,11 +1,11 @@
-import { integer, text } from "drizzle-orm/sqlite-core";
-import { generatePublicId, generateReadableId, type IdPrefix } from "./id-helpers";
+import { integer, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { generateReadableId, type IdPrefix } from "./id-helpers";
 
 export function idColumns(prefix: IdPrefix) {
   return {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    publicId: text("public_id").notNull().unique().$defaultFn(generatePublicId),
-    readableId: text("readable_id")
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    publicId: uuid("public_id").notNull().unique().defaultRandom(),
+    readableId: varchar("readable_id", { length: 20 })
       .notNull()
       .unique()
       .$defaultFn(() => generateReadableId(prefix)),
@@ -13,10 +13,10 @@ export function idColumns(prefix: IdPrefix) {
 }
 
 export const auditColumns = {
-  recordCreationTimeStamp: integer("record_creation_timestamp", { mode: "timestamp" })
+  recordCreationTimeStamp: timestamp("record_creation_timestamp", { withTimezone: true })
     .notNull()
-    .$defaultFn(() => new Date()),
-  recordCreatedBy: text("record_created_by").notNull(),
-  recordUpdatedTimesTamp: integer("record_updated_timestamp", { mode: "timestamp" }),
-  recordModifiedBy: text("record_modified_by"),
+    .defaultNow(),
+  recordCreatedBy: varchar("record_created_by", { length: 255 }).notNull(),
+  recordUpdatedTimesTamp: timestamp("record_updated_timestamp", { withTimezone: true }),
+  recordModifiedBy: varchar("record_modified_by", { length: 255 }),
 };

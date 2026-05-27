@@ -1,11 +1,11 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
 import { idColumns, auditColumns } from "./_columns";
 import { ID_PREFIXES } from "./id-helpers";
 import { users } from "./users";
 
-export const groups = sqliteTable("groups", {
+export const groups = pgTable("groups", {
   ...idColumns(ID_PREFIXES.group),
-  name: text("name").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
   ownerUserId: integer("owner_user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

@@ -1,14 +1,14 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { idColumns, auditColumns } from "./_columns";
 import { ID_PREFIXES } from "./id-helpers";
 import { users } from "./users";
 import { groups } from "./groups";
 
-export const setlists = sqliteTable("setlists", {
+export const setlists = pgTable("setlists", {
   ...idColumns(ID_PREFIXES.setlist),
-  name: text("name").notNull(),
-  eventDate: text("event_date"),
-  venue: text("venue"),
+  name: varchar("name", { length: 200 }).notNull(),
+  eventDate: varchar("event_date", { length: 20 }),
+  venue: varchar("venue", { length: 200 }),
   notes: text("notes"),
   ownerUserId: integer("owner_user_id").references(() => users.id, {
     onDelete: "cascade",

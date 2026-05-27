@@ -1,29 +1,29 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { boolean, index, integer, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { idColumns, auditColumns } from "./_columns";
 import { ID_PREFIXES } from "./id-helpers";
 import { users } from "./users";
 
-export const songs = sqliteTable(
+export const songs = pgTable(
   "songs",
   {
     ...idColumns(ID_PREFIXES.song),
-    title: text("title").notNull(),
-    artist: text("artist"),
-    originalKey: text("original_key"),
+    title: varchar("title", { length: 300 }).notNull(),
+    artist: varchar("artist", { length: 200 }),
+    originalKey: varchar("original_key", { length: 10 }),
     bpm: integer("bpm"),
     capo: integer("capo"),
-    genre: text("genre"),
-    tags: text("tags"),
+    genre: varchar("genre", { length: 100 }),
+    tags: varchar("tags", { length: 500 }),
     contentChordPro: text("content_chord_pro").notNull(),
-    hasChords: integer("has_chords", { mode: "boolean" }).notNull().default(false),
+    hasChords: boolean("has_chords").notNull().default(false),
     notes: text("notes"),
     authorUserId: integer("author_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    authorGuestId: text("author_guest_id"),
-    authorGuestName: text("author_guest_name"),
-    isDeleted: integer("is_deleted", { mode: "boolean" }).notNull().default(false),
-    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    authorGuestId: varchar("author_guest_id", { length: 100 }),
+    authorGuestName: varchar("author_guest_name", { length: 200 }),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     ...auditColumns,
   },
   (t) => [

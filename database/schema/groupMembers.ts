@@ -1,10 +1,10 @@
-import { index, integer, sqliteTable, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, pgTable, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { idColumns, auditColumns } from "./_columns";
 import { ID_PREFIXES } from "./id-helpers";
 import { groups } from "./groups";
 import { users } from "./users";
 
-export const groupMembers = sqliteTable(
+export const groupMembers = pgTable(
   "group_members",
   {
     ...idColumns(ID_PREFIXES.groupMember),
@@ -14,9 +14,9 @@ export const groupMembers = sqliteTable(
     userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    joinedAt: integer("joined_at", { mode: "timestamp" })
+    joinedAt: timestamp("joined_at", { withTimezone: true })
       .notNull()
-      .$defaultFn(() => new Date()),
+      .defaultNow(),
     ...auditColumns,
   },
   (t) => [

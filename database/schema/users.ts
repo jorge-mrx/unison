@@ -1,13 +1,13 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { boolean, pgTable, varchar } from "drizzle-orm/pg-core";
 import { idColumns, auditColumns } from "./_columns";
 import { ID_PREFIXES } from "./id-helpers";
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   ...idColumns(ID_PREFIXES.user),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  name: text("name").notNull(),
-  isSuperadmin: integer("is_superadmin", { mode: "boolean" }).notNull().default(false),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  isSuperadmin: boolean("is_superadmin").notNull().default(false),
   ...auditColumns,
 });
 

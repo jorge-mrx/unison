@@ -1,10 +1,10 @@
-import { integer, sqliteTable, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { integer, pgTable, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { idColumns, auditColumns } from "./_columns";
 import { ID_PREFIXES } from "./id-helpers";
 import { users } from "./users";
 import { songs } from "./songs";
 
-export const userFavorites = sqliteTable(
+export const userFavorites = pgTable(
   "user_favorites",
   {
     ...idColumns(ID_PREFIXES.favorite),
@@ -14,9 +14,9 @@ export const userFavorites = sqliteTable(
     songId: integer("song_id")
       .notNull()
       .references(() => songs.id, { onDelete: "cascade" }),
-    favoritedAt: integer("favorited_at", { mode: "timestamp" })
+    favoritedAt: timestamp("favorited_at", { withTimezone: true })
       .notNull()
-      .$defaultFn(() => new Date()),
+      .defaultNow(),
     ...auditColumns,
   },
   (t) => [uniqueIndex("user_favorites_user_song_uq").on(t.userId, t.songId)],
