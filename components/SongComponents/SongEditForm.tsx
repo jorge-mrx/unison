@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TagInput } from "@/components/ui/tag-input";
 import {
   Dialog,
   DialogContent,
@@ -245,7 +246,18 @@ export function SongEditForm({ publicId, defaultValues }: Props) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="tags">{t.tagsLabel}</Label>
-              <Input id="tags" placeholder={t.tagsPlaceholder} {...register("tags")} />
+              <Controller
+                control={control}
+                name="tags"
+                render={({ field }) => (
+                  <TagInput
+                    id="tags"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder={t.tagsPlaceholder}
+                  />
+                )}
+              />
             </div>
           </div>
 
